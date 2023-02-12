@@ -7,9 +7,10 @@ export class RedisPubSubClient extends ClientProxy {
     responseCallbackHandlers: Map<string, (packet: WritePacket<any>) => void> = new Map()
     responseChannels: Map<string, boolean> = new Map()
 
-    constructor() {
+    constructor(options: any) {
       super()
 
+      console.log("OPTIONS:", options)
       const redisSubClient = RedisService.getClient("sub")
       redisSubClient.on("message", (channel, message) => {
         if (/.reply$/.test(channel)) {

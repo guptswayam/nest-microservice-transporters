@@ -10,11 +10,11 @@ const sleep = promisify(setTimeout)
 
 @Injectable()
 export class TodosService implements OnApplicationBootstrap {
-  // @Client({ transport: Transport.REDIS, options: { host: 'localhost', port: 6379, }, })
-  client: ClientProxy;
+  // client: ClientProxy
+  // client: RedisPubSubClient;
 
-  constructor() {
-    this.client = new RedisPubSubClient()
+  constructor(@Inject("TODO_SERVICE") private client: RedisPubSubClient) {
+    // this.client = new RedisPubSubClient()
   }
 
   counter: number = 1
