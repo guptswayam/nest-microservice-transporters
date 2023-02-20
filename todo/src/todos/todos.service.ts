@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { Client, ClientProxy, Transport } from '@nestjs/microservices';
-import { timeout } from 'rxjs';
+import { lastValueFrom, timeout } from 'rxjs';
 import { RedisPubSubClient } from 'src/common/redisPubsub/redisPubSub.client';
 import { promisify } from 'util';
 import { CreateTodoDto } from './dto/create-todo.dto';
@@ -33,6 +33,7 @@ export class TodosService implements OnApplicationBootstrap {
   async findAll() {
     // this.client.emit("todos_get", {x: "y"})
     try {
+      let data;
       const res = await new Promise((resolve, reject) => {
         this.client.send("todos_findall", {counter: this.counter++}).pipe(
           timeout(2000)
@@ -40,7 +41,10 @@ export class TodosService implements OnApplicationBootstrap {
           next: (res) => {
             console.log(res)
             console.log("FINDALL")
-            resolve(res)
+            data = res.data
+          },
+          complete: () => {
+            resolve(data)
           },
           error: (err) => {
             reject(err)
@@ -55,14 +59,7 @@ export class TodosService implements OnApplicationBootstrap {
   }
 
   findOne(id: number) {
-    return new Promise((resolve, reject) => {
-      this.client.send("todos_findone", {dean: "ambrose"}).subscribe({
-        next: (res) => {
-          console.log("FINDONE")
-          resolve(res)
-        },
-      })
-    })
+    return lastValueFrom(this.client.send("todos_findone", {dean: "ambrose"}))
     // return `This action returns a #${id} todo`;
   }
 

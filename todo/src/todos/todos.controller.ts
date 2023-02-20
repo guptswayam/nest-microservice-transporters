@@ -1,15 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, OnApplicationBootstrap } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { EventPattern, MessagePattern } from '@nestjs/microservices';
 import { promisify } from 'util';
+import { RedisPubSubServer } from 'src/common/redisPubsub/redisPubsub.strategy';
 
 const sleep = promisify(setTimeout)
 
+const AllowedRequests = {
+  todos_findall: "handleTodoFindAll"
+}
+
 @Controller('todos')
 export class TodosController {
-  constructor(private readonly todosService: TodosService) {}
+  serverStrategy: RedisPubSubServer
+
+  constructor(private readonly todosService: TodosService) {
+    // Another way of instantiating strategy and adding message pattern handlers.
+    this.serverStrategy = new RedisPubSubServer()   
+    for(const key in AllowedRequests) {
+      if(AllowedRequests[key] && this[AllowedRequests[key]]) {
+        this.serverStrategy.addHandler(key, this.handleTodoFindAll, false)
+      }
+    }
+    this.serverStrategy.listen(() => {
+      console.log("Message Patterns are Registered and strategy is ready to serve requests")
+    })
+  }
+  
 
   @Post()
   create(@Body() createTodoDto: CreateTodoDto) {
@@ -36,19 +55,30 @@ export class TodosController {
     return this.todosService.remove(+id);
   }
 
-  @EventPattern('todos_get')
-  async handleGetTODO(data: Record<string, unknown>) {
-    console.log(data)
-  }
+  // @EventPattern('todos_get')
+  // async handleGetTODO(data: Record<string, unknown>) {
+  //   console.log(data)
+  // }
 
-  @EventPattern('todos_create')
-  async handleCreateTODO(data: Record<string, unknown>) {
-    console.log(data)
-  }
+  // @EventPattern('todos_create')
+  // async handleCreateTODO(data: Record<string, unknown>) {
+  //   console.log(data)
+  // }
 
   // @MessagePattern("todos_findall")
   // async handleTodoFindAll(data: Record<string, unknown>) {
   //   await sleep(1000)
   //   return data
   // }
+
+  async handleTodoFindAll(data: Record<string, unknown>) {
+    await sleep(1000)
+    return data
+  }
+
+  @MessagePattern("todos_findone")
+  async handleTodoFindOne(data: Record<string, unknown>) {
+    await sleep(1000)
+    return data
+  }
 }

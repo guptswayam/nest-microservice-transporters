@@ -17,8 +17,10 @@ export class RedisPubSubClient extends ClientProxy {
           
           const parsedMessage = JSON.parse(message)
           console.log("XYZ", parsedMessage)
-          const handler = this.responseCallbackHandlers.get(parsedMessage.id)
-          handler({response: parsedMessage.data})
+          const handler = this.responseCallbackHandlers.get(parsedMessage.response.id)
+          if(parsedMessage.isDisposed)
+            this.responseCallbackHandlers.delete(parsedMessage.id)
+          handler(parsedMessage)
         }
       })
 
@@ -61,6 +63,10 @@ export class RedisPubSubClient extends ClientProxy {
       }));
 
       
-      return () => {}
+      return () => {
+        // this function runs once the observable is completed or error occured in observable stream
+        this.responseCallbackHandlers.delete(requestId)
+        console.log("Teardown")
+      }
     }
 }

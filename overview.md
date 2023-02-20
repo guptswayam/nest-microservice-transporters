@@ -6,9 +6,14 @@
 5. To enable the request-response message type, Nest creates two logical channels - one is responsible for transferring the data while the other waits for incoming responses
     - There can be overhead for this. More on this: https://stackoverflow.com/a/63179510
 6. With redis pub-sub model, we need to deal with redis pub-sub subscribe issue across multiple instances of same microservice
-    - To deal with it, redis doesn't provide built-in load-balancer, we need to implement load-balancing logic on our own
-    - https://github.com/nestjs/nest/issues/358
-    - https://stackoverflow.com/questions/62888050
+    - To solve this issue, we have two
+        1. Redlock
+            - acquire the lock using requestId with retryLimit of *zero*. 
+            - So once it's reached to any of the instance, it acquires lock and message can't processed by any other instance
+        2. Load Blancing
+            - To deal with it, redis doesn't provide built-in load-balancer, we need to implement load-balancing logic on our own
+            - https://github.com/nestjs/nest/issues/358
+            - https://stackoverflow.com/questions/62888050
 
 # Source
 1. [Build Custom Transporters from Scratch](https://dev.to/nestjs/integrate-nestjs-with-external-services-using-microservice-transporters-part-1-p3)

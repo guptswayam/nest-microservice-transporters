@@ -7,17 +7,20 @@ export class RedisPubSubClient extends ClientProxy {
     responseCallbackHandlers: Map<string, (packet: WritePacket<any>) => void> = new Map()
     responseChannels: Map<string, boolean> = new Map()
 
-    constructor() {
+    constructor(options: any) {
       super()
 
+      console.log("OPTIONS:", options)
       const redisSubClient = RedisService.getClient("sub")
       redisSubClient.on("message", (channel, message) => {
         if (/.reply$/.test(channel)) {
           
           const parsedMessage = JSON.parse(message)
           console.log("XYZ", parsedMessage)
-          const handler = this.responseCallbackHandlers.get(parsedMessage.id)
-          handler({response: parsedMessage.data})
+          const handler = this.responseCallbackHandlers.get(parsedMessage.response.id)
+          if(parsedMessage.isDisposed)
+            this.responseCallbackHandlers.delete(parsedMessage.id)
+          handler(parsedMessage)
         }
       })
 
@@ -60,6 +63,10 @@ export class RedisPubSubClient extends ClientProxy {
       }));
 
       
-      return () => {}
+      return () => {
+        // this function runs once the observable is completed or error occured in observable stream
+        this.responseCallbackHandlers.delete(requestId)
+        console.log("Teardown")
+      }
     }
 }

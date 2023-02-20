@@ -34,7 +34,10 @@ export class RedisPubSubServer
                 const handler = this.messageHandlers.get(channel)
                 const resData = await (handler(JSON.parse(message)) as Promise<any>)
                 if(!handler.isEventHandler) {
-                    redisPubClient.publish(`${channel}.reply`, JSON.stringify(resData))
+                    const response = this.transformToObservable(resData)
+                    this.send(response, (data) => {
+                        redisPubClient.publish(`${channel}.reply`, JSON.stringify(data))
+                    })
                 }
             }
                 
