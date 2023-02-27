@@ -5,7 +5,8 @@
 4. In this project, we have implemented request-response and event-based approach using redis pub-sub model with inbuilt transporters and custom transporters
 5. To enable the request-response message type, Nest creates two logical channels - one is responsible for transferring the data while the other waits for incoming responses
     - There can be overhead for this. More on this: https://stackoverflow.com/a/63179510
-6. With redis pub-sub model, we need to deal with redis pub-sub subscribe issue across multiple instances of same microservice
+6. To use multiple strategies, we could define transportId in custom strategy and then nest will take of separation of listeners by just passing transportId in message pattern
+7. With redis pub-sub model, we need to deal with redis pub-sub subscribe issue across multiple instances of same microservice
     - To solve this issue, we have two
         1. Redlock
             - acquire the lock using requestId with retryLimit of *zero*. 

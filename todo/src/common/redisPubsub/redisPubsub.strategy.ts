@@ -1,14 +1,23 @@
-import { CustomTransportStrategy, Server } from '@nestjs/microservices';
+import { CustomTransportStrategy, Server, Transport } from '@nestjs/microservices';
 import {RedisService} from './redis.service';
 
 export class RedisPubSubServer
   extends Server
   implements CustomTransportStrategy {
-  /**
-   * This method is triggered when you run "app.listen()".
-   */
 
 
+    // To use multiple strategies, we could define transportId in custom strategy and then nest will take of separation of listeners by just passing transportId in message pattern
+    transportId?: symbol | Transport;
+
+    constructor(transportId: symbol) {
+        super()
+        this.transportId = transportId
+    }
+
+
+    /**
+        * This method is triggered when you run "app.listen()".
+    */
     listen(callback: () => void) {
 
         const redisSubClient = RedisService.getClient("sub")

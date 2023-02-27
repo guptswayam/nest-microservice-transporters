@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { AppModule } from './app.module';
 import { RedisPubSubServer } from './common/redisPubsub/redisPubsub.strategy';
+import strategiesConstant from './strategies.constant';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -15,7 +16,7 @@ async function bootstrap() {
   // });
 
   const microservice = app.connectMicroservice<MicroserviceOptions>({
-    strategy: new RedisPubSubServer(),
+    strategy: new RedisPubSubServer(strategiesConstant.symbols.TODO),
   })
 
   await app.startAllMicroservices();

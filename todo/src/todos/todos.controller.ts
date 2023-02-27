@@ -5,6 +5,7 @@ import { UpdateTodoDto } from './dto/update-todo.dto';
 import { EventPattern, MessagePattern } from '@nestjs/microservices';
 import { promisify } from 'util';
 import { RedisPubSubServer } from 'src/common/redisPubsub/redisPubsub.strategy';
+import strategiesConstant from 'src/strategies.constant';
 
 const sleep = promisify(setTimeout)
 
@@ -18,10 +19,10 @@ export class TodosController {
 
   constructor(private readonly todosService: TodosService) {
     // Another way of instantiating strategy and adding message pattern handlers.
-    this.serverStrategy = new RedisPubSubServer()   
+    this.serverStrategy = new RedisPubSubServer(strategiesConstant.symbols.TODO)   
     for(const key in AllowedRequests) {
       if(AllowedRequests[key] && this[AllowedRequests[key]]) {
-        this.serverStrategy.addHandler(key, this.handleTodoFindAll, false)
+        this.serverStrategy.addHandler(key, this.handleTodoFindAll, false, {})
       }
     }
     this.serverStrategy.listen(() => {
@@ -65,7 +66,7 @@ export class TodosController {
   //   console.log(data)
   // }
 
-  // @MessagePattern("todos_findall")
+  // @MessagePattern("todos_findall", strategiesConstant.symbols.TODO)
   // async handleTodoFindAll(data: Record<string, unknown>) {
   //   await sleep(1000)
   //   return data
@@ -76,7 +77,7 @@ export class TodosController {
     return data
   }
 
-  @MessagePattern("todos_findone")
+  @MessagePattern("todos_findone", strategiesConstant.symbols.TODO)
   async handleTodoFindOne(data: Record<string, unknown>) {
     await sleep(1000)
     return data
