@@ -1,5 +1,5 @@
 import { ClientProxy, ReadPacket, WritePacket } from "@nestjs/microservices";
-import {v4 as v4uuid} from "uuid"
+// import {v4 as v4uuid} from "uuid"
 import { RedisService } from "./redis.service";
 
 export class RedisPubSubClient extends ClientProxy {
@@ -11,11 +11,14 @@ export class RedisPubSubClient extends ClientProxy {
       super()
 
       console.log("OPTIONS:", options)
+      this.initializeSerializer(options)
+      this.initializeDeserializer(options)
       const redisSubClient = RedisService.getClient("sub")
-      redisSubClient.on("message", (channel, message) => {
+      redisSubClient.on("message", async (channel, message) => {
         if (/.reply$/.test(channel)) {
           
-          const parsedMessage = JSON.parse(message)
+          let parsedMessage = JSON.parse(message)
+          parsedMessage = await this.deserializer.deserialize(parsedMessage)
           console.log("XYZ", parsedMessage)
           const handler = this.responseCallbackHandlers.get(parsedMessage.response.id)
           if(parsedMessage.isDisposed)
@@ -43,7 +46,9 @@ export class RedisPubSubClient extends ClientProxy {
       callback: (packet: WritePacket<any>) => void,
     ): () => void {
 
-      const requestId = v4uuid()
+      // const requestId = v4uuid()
+      const { id: requestId} = this.assignPacketId(packet)
+      packet = this.serializer.serialize(packet)
 
       if (!this.responseChannels.has(packet.pattern)) {
         const redisSubClient = RedisService.getClient("sub")
@@ -56,11 +61,7 @@ export class RedisPubSubClient extends ClientProxy {
       this.responseCallbackHandlers.set(requestId, callback)
     
       const redisPubClient = RedisService.getClient("pub")
-      redisPubClient.publish(packet.pattern, JSON.stringify({
-        pattern: packet.pattern,
-        data: packet.data,
-        id: requestId
-      }));
+      redisPubClient.publish(packet.pattern, JSON.stringify(packet));
 
       
       return () => {
