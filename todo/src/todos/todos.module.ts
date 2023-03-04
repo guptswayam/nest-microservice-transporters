@@ -13,7 +13,7 @@ class Serializer {
 
 class Deserializer {
   deserialize(msg) {
-    delete msg.response.timestamp
+    delete msg.timestamp
     return msg
   }
 }

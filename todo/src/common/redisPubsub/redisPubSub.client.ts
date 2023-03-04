@@ -20,7 +20,7 @@ export class RedisPubSubClient extends ClientProxy {
           let parsedMessage = JSON.parse(message)
           parsedMessage = await this.deserializer.deserialize(parsedMessage)
           console.log("XYZ", parsedMessage)
-          const handler = this.responseCallbackHandlers.get(parsedMessage.response.id)
+          const handler = this.responseCallbackHandlers.get(parsedMessage.id)
           if(parsedMessage.isDisposed)
             this.responseCallbackHandlers.delete(parsedMessage.id)
           handler(parsedMessage)

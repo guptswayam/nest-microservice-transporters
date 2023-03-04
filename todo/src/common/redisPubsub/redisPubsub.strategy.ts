@@ -1,4 +1,5 @@
-import { CustomTransportStrategy, Server, Transport } from '@nestjs/microservices';
+import { CustomTransportStrategy, Server, Transport, IncomingRequest } from '@nestjs/microservices';
+import { tap } from 'rxjs';
 import {RedisService} from './redis.service';
 
 export class RedisPubSubServer
@@ -41,11 +42,14 @@ export class RedisPubSubServer
         redisSubClient.on("message", async (channel, message) => {
             if (this.messageHandlers.has(channel)) {
                 const handler = this.messageHandlers.get(channel)
-                const resData = await (handler(JSON.parse(message)) as Promise<any>)
+                const msg = JSON.parse(message) as IncomingRequest;
+                const resData = await (handler(msg.data) as Promise<any>)
                 if(!handler.isEventHandler) {
-                    const response = this.transformToObservable(resData)
-                    this.send(response, (data) => {
-                        redisPubClient.publish(`${channel}.reply`, JSON.stringify(data))
+                    const response = this.transformToObservable(resData).pipe(tap(x => x))
+                    this.send(response, (res) => {
+                        const resData = Object.assign({}, msg, res)
+                        delete resData.data // this is received data
+                        redisPubClient.publish(`${channel}.reply`, JSON.stringify(resData))
                     })
                 }
             }

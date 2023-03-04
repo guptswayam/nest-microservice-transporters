@@ -74,7 +74,7 @@ export class TodosController {
 
   async handleTodoFindAll(data: Record<string, unknown>) {
     await sleep(1000)
-    return data
+    // return data
   }
 
   @MessagePattern("todos_findone", strategiesConstant.symbols.TODO)

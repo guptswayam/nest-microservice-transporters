@@ -33,18 +33,18 @@ export class TodosService implements OnApplicationBootstrap {
   async findAll() {
     // this.client.emit("todos_get", {x: "y"})
     try {
-      let data;
+      let resData;
       const res = await new Promise((resolve, reject) => {
         this.client.send("todos_findall", {counter: this.counter++}).pipe(
           timeout(2000)
         ).subscribe({
-          next: (res) => {
-            console.log(res)
+          next: (data) => {
+            console.log(data)
             console.log("FINDALL")
-            data = res.data
+            resData = data
           },
           complete: () => {
-            resolve(data)
+            resolve(resData)
           },
           error: (err) => {
             reject(err)
