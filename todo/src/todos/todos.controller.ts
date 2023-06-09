@@ -1,11 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, OnApplicationBootstrap } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, OnApplicationBootstrap, UsePipes, ValidationPipe, BadRequestException, UseFilters, HttpException } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
-import { EventPattern, MessagePattern } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { promisify } from 'util';
 import { RedisPubSubServer } from 'src/common/redisPubsub/redisPubsub.strategy';
 import strategiesConstant from 'src/strategies.constant';
+import { RPCExceptionFilter } from '../common/exception-filter/rpc-exception.filter';
 
 const sleep = promisify(setTimeout)
 
@@ -31,8 +32,11 @@ export class TodosController {
   }
   
 
-  @Post()
-  create(@Body() createTodoDto: CreateTodoDto) {
+  @UseFilters(new RPCExceptionFilter())
+  @UsePipes(new ValidationPipe())
+  @MessagePattern("createTodo", strategiesConstant.symbols.TODO)
+  create(@Payload() createTodoDto: CreateTodoDto) {
+    // throw new HttpException("SED", 400)
     return this.todosService.create(createTodoDto);
   }
 
