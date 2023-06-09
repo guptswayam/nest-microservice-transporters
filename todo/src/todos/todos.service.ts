@@ -39,8 +39,7 @@ export class TodosService implements OnApplicationBootstrap {
           timeout(2000)
         ).subscribe({
           next: (data) => {
-            console.log(data)
-            console.log("FINDALL")
+            console.log("FINDALL", data)
             resData = data
           },
           complete: () => {

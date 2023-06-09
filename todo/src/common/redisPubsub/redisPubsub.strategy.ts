@@ -7,7 +7,7 @@ export class RedisPubSubServer
   implements CustomTransportStrategy {
 
 
-    // To use multiple strategies, we could define transportId in custom strategy and then nest will take of separation of listeners by just passing transportId in message pattern
+    // To use multiple strategies, we could define transportId in custom strategy and then nest will take of separation of listeners by just passing transportId in message pattern decorator
     transportId?: symbol | Transport;
 
     constructor(transportId: symbol) {
